@@ -7,6 +7,7 @@ from retrieval_app import ensure_retrieval_alive
 import requests
 import time
 from loguru import logger
+from src.entity.milvus_api import milvus_router
 
 ensure_retrieval_alive()
 
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
 def register_routes(app: FastAPI) -> None:
     """Register routes to the FastAPI application."""
     app.include_router(retrieval_router, prefix=f"/{setting.server_prefix}")
+    app.include_router(milvus_router, prefix=f"/milvus")
 
 app = create_app()
 

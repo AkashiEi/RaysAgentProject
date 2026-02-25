@@ -52,6 +52,9 @@ class Setting(BaseSettings):
     retrieval_prefix: str
     retrieval_workers: int
 
+    milvus_uri: str
+    milvus_token: str
+
 
     
     @property
