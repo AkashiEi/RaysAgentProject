@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Dict, Union, Optional
 from pydantic import BaseModel
-from src.database import get_db
+from src.database import get_db,get_milvus_client
 import json
 import re
 from loguru import logger
@@ -9,6 +9,8 @@ from src.config import setting
 from src.entity.request import ChatMessage, llm_base_client, llm_reason_client,langChainClient
 from sqlalchemy import text
 from langchain.tools import tool
+import requests
+
 
 def loadMainSkills(path: str):
     """
@@ -182,3 +184,30 @@ def pokemonStat(IV:int,EV:int,base_stat:int,level:int,nature:str,stat_type:str):
         actual_stat = (((2 * base_stat + IV + (EV // 4)) * level) // 100 + 5) * nature
     logger.info(f"Pokemon Stat {stat_type} actualStat:{actual_stat}")
     return {"result": {"actual_stat": int(actual_stat)}}
+
+@tool
+def milvus_search(collection_name:str,query:str,output_fields:List[str],top_k:int=5):
+    """
+    基于Milvus向量数据库的相似度搜索工具
+    Args:
+        collection_name (str): Milvus中的集合名称
+        query (List[float]): 查询的向量表示
+        top_k (int): 返回的最相似结果数量，默认为5,
+        output_fields (List[str]): 需要返回的字段列表
+    """
+    try:
+        query_vector = requests.post(
+                f"http://{setting.retrieval_host}:{setting.retrieval_port}/{setting.retrieval_prefix}/v1/embedding/normal",
+                json={"context": query},proxies={"http": None, "https": None}).json()["data"][0]["embedding"]
+        milvus_client = get_milvus_client()
+        results = milvus_client.search(
+            collection_name=collection_name,
+            data=[query_vector],
+            anns_field="vector",
+            limit=top_k,
+            output_fields=output_fields
+        )
+        return {"results": results}
+    except Exception as e:
+        logger.error(f"Milvus search failed: {e}")
+        return {"result": str(e)}

@@ -11,3 +11,13 @@
 数据库表结构
  - 作用：告知目前数据库中存在表资源
  - skill所在位置：src/skills/database
+
+### 知识库数据获取流程
+
+1、通过skills获取当前milvus数据库持有的主题以及表结构
+
+2、通过milvus_search获取相关文本内容
+
+Milvus数据库信息
+ - 作用：存放相关自有知识库
+ - skill所在位置：src/skills/milvus

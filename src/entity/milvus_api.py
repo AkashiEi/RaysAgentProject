@@ -31,7 +31,7 @@ async def list_collections():
 @milvus_router.post("/search")
 async def search(request: searchRequest):
     query_vector = requests.post(
-                "http://127.0.0.1:26226/retrieval/v1/embedding/normal",
+                f"http://{setting.retrieval_host}:{setting.retrieval_port}/{setting.retrieval_prefix}/v1/embedding/normal",
                 json={"context": request.query},
                 proxies={"http": None, "https": None}).json()["data"][0]["embedding"]
     try:

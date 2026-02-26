@@ -1,5 +1,8 @@
 # RayAgentProject
 
+**2026/02206**
+基本实现embedding + milvus + reranker + llm 实现RAG agent
+
 **2026/02/25**
 
 - 初步实现通过LlamaIndex + Qwen3-Embedding-0.6B 写入Milvus向量库，及相关搜索接口输出
@@ -13,6 +16,6 @@
 
 **todo**
 
-- 1、结合embedding + milvus + reranker + llm 实现RAG agent
+- 1、优化RAG agent
 
 - 2、skills改为三层 Skills 加载形式

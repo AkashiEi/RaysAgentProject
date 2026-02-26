@@ -1,4 +1,4 @@
-from src.tools.tools import DatabaseTool,SQLGenerationTool,loadSkills,pokemonStat,loadMainSkills
+from src.tools.tools import DatabaseTool,SQLGenerationTool,loadSkills,pokemonStat,loadMainSkills,milvus_search
 from loguru import logger
 from src.config import setting
 from src.entity.request import ChatMessage, llm_base_client, llm_reason_client,langChainClient
@@ -7,42 +7,41 @@ from langchain_core.callbacks import BaseCallbackHandler
 
 
 # 加载skills文件夹下的所有技能
-skills_prompt = """你是一个【技能使用判定器】，不是直接回答问题的助手。
+skills_prompt = """
+你是一个具备工具调用能力的智能体。
 
-你的唯一任务是判断：  
-【用户问题是否必须使用 skills（技能文件）才能完成】。
+当问题涉及以下情况时，必须直接调用对应工具，而不是输出文本判断：
 
-判定原则（严格遵守）：
+1. 使用向量数据库查询文本信息时 → 调用 milvus_search 查询对应的小说内容
+2. 使用结构化数据库查询数据时 → 调用 DatabaseTool
+3. 需要生成 SQL语句时 → 调用 SQLGenerationTool
+4. 需要读取技能规则 → 调用 loadSkills
+5. 需要计算宝可梦属性数值 → 调用 pokemonStat
 
-1. 如果问题满足以下任意一条，必须使用技能：
-   - 涉及结构化数据查询（数值、范围、统计、等级、属性、参数）
-   - 涉及数据库 / 表 / 字段 / SQL / 查询流程
-   - 涉及需要遵循“固定步骤 / 固定流程 / 标准化查找方式”的任务
-   - 技能文件中可能定义了专用流程或规则
+禁止：
+- 输出 requires_skill
+- 仅做判断不执行
+- 直接回答小说剧情问题
 
-2. 如果问题满足以下全部条件，禁止使用技能：
-   - 纯概念解释
-   - 常识性知识
-   - 不依赖内部数据或流程
-   - 不要求精确数值或范围
+当满足触发条件时，必须直接发起 tool_call。
+不要输出普通文本。
 
-3. 你【不能假设】自己知道技能内容，
-   技能只能通过 loadSkills 工具加载后才能使用。
-
-输出要求（非常重要）：
-- 只允许输出 JSON
-- 不要解释原因
-- 不要回答用户问题
+当需要访问向量数据库和结构化数据库时：
+步骤1：必须先调用 loadSkills 加载 src/skills/data_search/data_search_flow.md
+步骤2：解析其中定义的字段名和查询流程
+步骤3：按照文档中的字段名调用 milvus_search或DatabaseTool，获取结果后继续后续步骤
+步骤4：禁止猜测字段名，必须严格按照文档中的字段名调用工具，当查询结构化数据时，必须先使用loadSkills获取对应的表结构,再调用 SQLGenerationTool 生成 SQL语句，最后调用 DatabaseTool 执行查询。
+如果未读取 data_search_flow.md，禁止调用 milvus_search和DatabaseTool。
 
 持有以下skills目录\n"""+loadMainSkills(setting.skills_path)
 
 
-def PokemonAgent():
-    PokemonAgent = create_agent(
+def RayAgent():
+    RayAgent = create_agent(
         model=langChainClient,
-        tools=[loadSkills,DatabaseTool,SQLGenerationTool,pokemonStat],
+        tools=[loadSkills,DatabaseTool,SQLGenerationTool,pokemonStat,milvus_search],
         system_prompt=skills_prompt)
-    return PokemonAgent
+    return RayAgent
 
 class PrintMessagesCallback(BaseCallbackHandler):
     def on_chat_model_start(self, serialized, messages, **kwargs):
