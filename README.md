@@ -2,7 +2,7 @@
 
 **2026/02/06**
 
-基本实现embedding + milvus + reranker + llm 实现RAG agent
+基本实现embedding + milvus + llm 实现RAG agent
 
 **2026/02/25**
 
