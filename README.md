@@ -1,6 +1,7 @@
 # RayAgentProject
 
-**2026/02206**
+**2026/02/06**
+
 基本实现embedding + milvus + reranker + llm 实现RAG agent
 
 **2026/02/25**
