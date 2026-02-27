@@ -43,31 +43,23 @@ def loadMainSkills(path: str):
 @tool
 def loadSkills(path: str):
     """
-    加载文件夹下的所有技能文件及内容
+    加载指定md文件的内容，用于技能调用
     Args:
         path (str): 技能文件夹路径
     """
     import os
 
-    skills = {}
-    if not os.path.isdir(path):
-        raise ValueError(f"The provided path '{path}' is not a valid directory.")
+    try:
+        with open(path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        filename = os.path.basename(path)
+        logger.info(f"Successfully loaded skill file: {filename}")
+        # 返回格式保持和原版本一致（字典结构），方便后续代码兼容
+        return {"result": {filename: content}}
     
-    for filename in os.listdir(path):
-        if filename.endswith(".md"):
-            file_path = os.path.join(path, filename)
-            try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    skills[filename] = content
-                    logger.info(f"Loaded skill file: {filename}")
-            except Exception as e:
-                logger.error(f"Failed to load skill file '{filename}': {e}")
-    
-    if not skills:
-        logger.warning(f"No skill files found in directory: {path}")
-    
-    return {"result": skills}
+    except Exception as e:
+        logger.error(f"Failed to load skill file '{path}': {e}")
+        raise ValueError(f"Error reading file '{path}': {str(e)}")
 
 @tool
 def DatabaseTool(query: str,name:str):
@@ -191,7 +183,7 @@ def milvus_search(collection_name:str,query:str,output_fields:List[str],top_k:in
     基于Milvus向量数据库的相似度搜索工具
     Args:
         collection_name (str): Milvus中的集合名称
-        query (List[float]): 查询的向量表示
+        query (str): 查询文本内容，工具会将其转换为向量进行搜索
         top_k (int): 返回的最相似结果数量，默认为5,
         output_fields (List[str]): 需要返回的字段列表
     """
@@ -200,13 +192,44 @@ def milvus_search(collection_name:str,query:str,output_fields:List[str],top_k:in
                 f"http://{setting.retrieval_host}:{setting.retrieval_port}/{setting.retrieval_prefix}/v1/embedding/normal",
                 json={"context": query},proxies={"http": None, "https": None}).json()["data"][0]["embedding"]
         milvus_client = get_milvus_client()
-        results = milvus_client.search(
+        search_results = milvus_client.search(
             collection_name=collection_name,
             data=[query_vector],
             anns_field="vector",
             limit=top_k,
             output_fields=output_fields
         )
+
+        candidate_docs = [] 
+        candidate_meta = []
+        for hit in search_results[0]:
+            doc_meta = hit.entity.to_dict()
+            candidate_docs.append(str(doc_meta["entity"]))
+            candidate_meta.append(doc_meta)
+        
+        rerank_resp = requests.post(
+            url=f"http://{setting.retrieval_host}:{setting.retrieval_port}/{setting.retrieval_prefix}/v1/reranker/normal",
+            json={
+                "context": {
+                    "query": query,
+                    "doc": candidate_docs,
+                    "top_k": top_k
+                }
+            },
+            proxies={"http": None, "https": None}
+        )
+
+        rerank_results = rerank_resp.json()["data"]
+
+        results = []
+        for rerank_item in rerank_results:
+            doc_index = rerank_item["index"]
+            results.append({
+                "score": rerank_item["score"],
+                "original_score": search_results[0][doc_index].score,
+                "meta": candidate_meta[doc_index]
+            })
+
         return {"results": results}
     except Exception as e:
         logger.error(f"Milvus search failed: {e}")

@@ -27,7 +27,7 @@ skills_prompt = """
 不要输出普通文本。
 
 当需要访问向量数据库和结构化数据库时：
-步骤1：必须先调用 loadSkills 加载 src/skills/data_search/data_search_flow.md
+步骤1：必须先调用 loadSkills 加载 data_search_flow.md
 步骤2：解析其中定义的字段名和查询流程
 步骤3：按照文档中的字段名调用 milvus_search或DatabaseTool，获取结果后继续后续步骤
 步骤4：禁止猜测字段名，必须严格按照文档中的字段名调用工具，当查询结构化数据时，必须先使用loadSkills获取对应的表结构,再调用 SQLGenerationTool 生成 SQL语句，最后调用 DatabaseTool 执行查询。

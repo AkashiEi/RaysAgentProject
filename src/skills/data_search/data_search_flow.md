@@ -1,23 +1,17 @@
-### 数据查找流程
+# 数据查询核心规则（Agent 必须优先加载）
+## 一、通用规则
+1. 禁止猜测字段名，所有查询字段必须严格匹配本文件定义；
+2. 结构化数据库查询流程：loadSkills(对应表tableList.md) → SQLGenerationTool → DatabaseTool；
+3. 向量数据库查询流程：loadSkills(milvus/collection/collection_list.md) → milvus_search。
 
-1、通过skill获取到当前持有的表结构
+## 二、字段定义
+### 2.1 向量查询（milvus_search）
+- 核心字段：
+  - id: int（主键）
+  - content: str（小说文本内容）
+  - vector: list[float]（文本向量，维度1024）
+  - volume: str（小说卷名）
 
-2、基于表结构生成对应的sql语句,当涉及语句复杂时使用reason模型，当语句不复杂时使用chat模型
-
-3、使用sql语句在数据库重进行查找
-
-4、涉及需要计算能力值的时候，需要使用对应的tool进行计算
-
-数据库表结构
- - 作用：告知目前数据库中存在表资源
- - skill所在位置：src/skills/database
-
-### 知识库数据获取流程
-
-1、通过skills获取当前milvus数据库持有的主题以及表结构
-
-2、通过milvus_search获取相关文本内容
-
-Milvus数据库信息
- - 作用：存放相关自有知识库
- - skill所在位置：src/skills/milvus
+### 2.2 结构化查询（DatabaseTool）
+- 通用字段：
+  - uuid（唯一标识）

@@ -11,4 +11,4 @@
 | increasedStat | 容易成长的能力 |
 | decreasedStat | 不容易成长的能力 |
 | likedFlavor | 喜欢的口味 |
-| dislikedFlavor | 不喜欢的口味
+| dislikedFlavor | 不喜欢的口味 |
