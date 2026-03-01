@@ -58,7 +58,16 @@ class RerankResponse(BaseModel):
     model: str
     usage: UsageInfo
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    logger.info("检测到GPU，优先使用GPU进行模型推理")
+    device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    logger.info("检测到Apple Silicon GPU，优先使用MPS进行模型推理")
+    device = torch.device("mps")
+    torch.mps.empty_cache()
+else:
+    logger.info("未检测到GPU，使用CPU进行模型推理")
+    device = torch.device("cpu")
 
 api_router = APIRouter()
 embedding_path = setting.embedding_path
@@ -422,6 +431,18 @@ def shutdown():
     return {
         "status": 1,
         "message": "Embedding service is shutting down"
+    }
+
+@api_router.get("/v1/satrtup")
+def satrtup():
+    if EMBEDDING_MODEL_STATUS != "Ready" or EMBEDDING_MODEL_STATUS != "Loading":
+        load_embedding_model()
+    if RERANKER_MODEL_STATUS != "Ready" or RERANKER_MODEL_STATUS != "Loading":
+        load_reranker_model()
+    
+    return {
+        "status": 1,
+        "message": "Embedding and Reranker service is started up"
     }
 
 @asynccontextmanager

@@ -55,7 +55,11 @@ class Setting(BaseSettings):
     milvus_uri: str
     milvus_token: str
 
-
+    agent_db_url: str
+    agent_db_port: int
+    agent_db_user: str
+    agent_db_password: str
+    agent_db_name: str
     
     @property
     def workspace_root(self) -> Path:

@@ -7,7 +7,7 @@ from src.entity.retrieval_api import create_app as CA,load_embedding_model
 import uvicorn
 from loguru import logger
 
-retrieval_host = "127.0.0.1" if setting.retrieval_host == "0.0.0.0" else setting.retrieval_host
+retrieval_host = "0.0.0.0" if setting.retrieval_host == "0.0.0.0" else setting.retrieval_host
 app = CA()
 
 def is_embedding_alive() -> bool:

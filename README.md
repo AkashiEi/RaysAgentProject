@@ -21,6 +21,22 @@ RaysAgentProject/          # 项目根目录
     └── tools/             # 工具函数/第三方工具封装模块
 ```
 
+**todo**
+
+- 1、微调Qwen3-0.6B模型为NL2SQL，实现快速的生成sql语句
+
+- 2、优化RAG agent
+
+- 3、将Agent改为FastAPI接口调用模式
+
+**2026/03/01**
+
+- 1、基于LangGraph的checkpoint功能实现多轮对话能力
+
+- 2、新增retrievalAPI手动加载embedding、reranker接口
+
+- 3、调整embedding、reranker的device加载，新增APPLE M系列芯片模式
+
 **2026/02/27**
 
 1、优化skills文件内容及格式
@@ -40,14 +56,3 @@ RaysAgentProject/          # 项目根目录
 - 1、通过FastAPI实现基础的embedding、reranker模型运行；
 
 - 2、通过LangChian 1.0构建基础的Skills Agent。
-
-
-**todo**
-
-- 1、基于LangChain实现多轮对话能力
-
-- 2、微调Qwen3-0.6B模型为NL2SQL，实现快速的生成sql语句
-
-- 3、优化RAG agent
-
-- 4、将Agent改为FastAPI接口调用模式

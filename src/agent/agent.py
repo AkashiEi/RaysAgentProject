@@ -4,6 +4,7 @@ from src.config import setting
 from src.entity.request import ChatMessage, llm_base_client, llm_reason_client,langChainClient
 from langchain.agents import create_agent
 from langchain_core.callbacks import BaseCallbackHandler
+from src.database.db_connect import get_agent_db_saver
 
 
 # 加载skills文件夹下的所有技能
@@ -37,10 +38,12 @@ skills_prompt = """
 
 
 def RayAgent():
+    checkpoint = get_agent_db_saver()
     RayAgent = create_agent(
         model=langChainClient,
         tools=[loadSkills,DatabaseTool,SQLGenerationTool,pokemonStat,milvus_search],
-        system_prompt=skills_prompt)
+        system_prompt=skills_prompt,
+        checkpointer=checkpoint)
     return RayAgent
 
 class PrintMessagesCallback(BaseCallbackHandler):
